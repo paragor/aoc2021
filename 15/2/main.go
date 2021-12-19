@@ -23,16 +23,16 @@ func main() {
 	first.wFromStart = first.w
 	maxY := len(f.f) - 1
 	maxX := len(f.f[maxY]) - 1
-	search(f)
+	f.search()
 	last := f.f[maxY][maxX]
 	fmt.Println(last.wFromStart - first.w)
 	//f.print()
 }
 
-func search(f *Field) {
+func (f *Field) search() {
 
 	s := &Stack{}
-	s.Push(Element{})
+	s.Push(WeightPoint{})
 	for s.Len() > 0 {
 		prevCoard := s.Pop()
 		f.f[prevCoard.y][prevCoard.x].was = true
@@ -43,9 +43,8 @@ func search(f *Field) {
 
 			w := next.w + prev.wFromStart
 			if !next.was {
-				s.Push(Element{x: nextCoard.x, y: nextCoard.y, W: w})
+				s.Push(WeightPoint{x: nextCoard.x, y: nextCoard.y, W: w})
 			}
-
 
 			if w < next.wFromStart || !next.was {
 				next.wFromStart = w
@@ -53,8 +52,6 @@ func search(f *Field) {
 			next.was = true
 
 		}
-		//f.print()
-		//fmt.Println()
 
 		if s.Len() > 2000 {
 			panic("wtf len")
@@ -67,14 +64,13 @@ type Point struct {
 	wFromStart int
 	was        bool
 	BEST       bool
-	SecondBest bool
 }
 
 type Field struct {
 	f [][]*Point
 }
 
-func (f *Field) markbest(startP Element) {
+func (f *Field) markbest(startP WeightPoint) {
 	start := f.f[startP.y][startP.x]
 	start.BEST = true
 	if startP.y == 0 && startP.x == 0 {
@@ -97,7 +93,7 @@ func (f *Field) markbest(startP Element) {
 
 //func (f*Field) NewField() *Field {
 func (f *Field) print() {
-	f.markbest(Element{
+	f.markbest(WeightPoint{
 		x: len(f.f[0]) - 1,
 		y: len(f.f) - 1,
 	})
@@ -111,9 +107,6 @@ func (f *Field) print() {
 			if cell.BEST {
 
 				s += fmt.Sprintf("@")
-
-			} else if cell.SecondBest {
-				s += fmt.Sprintf("#")
 
 			} else {
 				s += fmt.Sprintf("%d", cell.w)
@@ -202,23 +195,23 @@ func assert(u bool, msg string) {
 
 }
 
-type Element struct {
+type WeightPoint struct {
 	x, y int
-	W int
+	W    int
 }
 
 type Stack struct {
-	s []Element
+	s []WeightPoint
 }
 
 func (s *Stack) Len() int {
 	return len(s.s)
 
 }
-func (s *Stack) Push(res Element) {
+func (s *Stack) Push(res WeightPoint) {
 	s.s = append(s.s, res)
 }
-func (s *Stack) Pop() Element {
+func (s *Stack) Pop() WeightPoint {
 
 	if len(s.s) == 0 {
 		panic("wtf")
@@ -233,8 +226,8 @@ func (s *Stack) Pop() Element {
 	//s.s = s.s[:len(s.s)-1]
 	return r
 }
-func getPontsFor(field [][]*Point, y, x int) []Element {
-	res := []Element{}
+func getPontsFor(field [][]*Point, y, x int) []WeightPoint {
+	res := []WeightPoint{}
 
 	for _, point := range [][]int{
 		/*     */ {-1, 0},
@@ -245,7 +238,7 @@ func getPontsFor(field [][]*Point, y, x int) []Element {
 		if y+yy >= len(field) || y+yy < 0 || x+xx >= len(field[y]) || x+xx < 0 {
 			continue
 		}
-		res = append(res, Element{y: yy + y, x: xx + x})
+		res = append(res, WeightPoint{y: yy + y, x: xx + x})
 	}
 
 	return res
