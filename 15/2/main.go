@@ -1,9 +1,9 @@
 package main
 
 import (
+	"container/heap"
 	_ "embed"
 	"fmt"
-	"sort"
 	"strconv"
 )
 import "strings"
@@ -32,9 +32,10 @@ func main() {
 func (f *Field) search() {
 
 	s := &Stack{}
-	s.Push(WeightPoint{})
+	heap.Init(s)
+	heap.Push(s, WeightPoint{})
 	for s.Len() > 0 {
-		prevCoard := s.Pop()
+		prevCoard := heap.Pop(s).(WeightPoint)
 		f.f[prevCoard.y][prevCoard.x].was = true
 		for _, nextCoard := range getPontsFor(f.f, prevCoard.y, prevCoard.x) {
 
@@ -43,7 +44,7 @@ func (f *Field) search() {
 
 			w := next.w + prev.wFromStart
 			if !next.was {
-				s.Push(WeightPoint{x: nextCoard.x, y: nextCoard.y, W: w})
+				heap.Push(s, WeightPoint{x: nextCoard.x, y: nextCoard.y, W: w})
 			}
 
 			if w < next.wFromStart || !next.was {
@@ -53,9 +54,6 @@ func (f *Field) search() {
 
 		}
 
-		if s.Len() > 2000 {
-			panic("wtf len")
-		}
 	}
 }
 
@@ -208,24 +206,25 @@ func (s *Stack) Len() int {
 	return len(s.s)
 
 }
-func (s *Stack) Push(res WeightPoint) {
-	s.s = append(s.s, res)
+func (s *Stack) Less(i, j int) bool {
+	return s.s[i].W < s.s[j].W
 }
-func (s *Stack) Pop() WeightPoint {
-
+func (s *Stack) Swap(i, j int) {
+	s.s[i], s.s[j] = s.s[j], s.s[i]
+}
+func (s *Stack) Push(res interface{}) {
+	s.s = append(s.s, res.(WeightPoint))
+}
+func (s *Stack) Pop() interface{} {
 	if len(s.s) == 0 {
 		panic("wtf")
 	}
-	sort.Slice(s.s, func(i, j int) bool {
-		return s.s[i].W < s.s[j].W
-	})
-	r := s.s[0]
-	s.s = s.s[1:]
+	r := s.s[len(s.s) - 1]
+	s.s = s.s[:len(s.s) - 1]
 
-	//r := s.s[len(s.s)-1]
-	//s.s = s.s[:len(s.s)-1]
 	return r
 }
+
 func getPontsFor(field [][]*Point, y, x int) []WeightPoint {
 	res := []WeightPoint{}
 
