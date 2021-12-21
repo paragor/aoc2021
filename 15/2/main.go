@@ -36,6 +36,9 @@ func (f *Field) search() {
 	heap.Push(s, WeightPoint{})
 	for s.Len() > 0 {
 		prevCoard := heap.Pop(s).(WeightPoint)
+		if prevCoard.x == len(f.f[0]) && prevCoard.y == len(f.f) {
+			return
+		}
 		f.f[prevCoard.y][prevCoard.x].was = true
 		for _, nextCoard := range getPontsFor(f.f, prevCoard.y, prevCoard.x) {
 
